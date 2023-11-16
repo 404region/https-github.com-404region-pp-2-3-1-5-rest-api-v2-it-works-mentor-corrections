@@ -45,7 +45,7 @@ public class Init {
 
         Set<Role> adminRole = new HashSet<>(Set.of(adminRole1));
         Set<Role> userRole = new HashSet<>(Set.of(userRole1));
-        userRepository.save(new User( "Ann", "S", "admin", "d@d.ru", 99, "user", adminRole));
+        userRepository.save(new User( "Ann", "S", "admin", "d@d.ru", 99, "admin", adminRole));
         userRepository.save(new User( "Mary", "N" , "user1","u1@d.ru", 115,  "user", userRole));
         userRepository.save(new User( "Taylor", "S", "user2", "u2@d.ru",12, "user",  userRole));
         userRepository.save(new User( "Cat", "N", "user3","u2@d.ru", 3,  "user", userRole));

@@ -1,7 +1,9 @@
 package ru.kata.spring.boot_security.demo.configs;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -9,26 +11,45 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
-
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+@PreAuthorize("hasRole('ADMIN')")
+public class WebSecurityConfig {
+
     private final SuccessUserHandler successUserHandler;
 
+    @Autowired
     public WebSecurityConfig(SuccessUserHandler successUserHandler) {
         this.successUserHandler = successUserHandler;
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        /*
+                .authorizeHttpRequests((requests) -> requests
+                        .requestMatchers("/admin**").hasAuthority("ADMIN")
+                        .requestMatchers("/user**", "/api/user/**").hasAnyAuthority("ADMIN", "USER")
+                        .anyRequest().authenticated()
+                )
+                .formLogin((form) -> form
+                        .permitAll()
+                        .successHandler(successUserHandler)
+                )
+                .logout((logout) -> logout
+                        .logoutUrl("/logout")
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+                        .logoutSuccessUrl("/login")
+                        .permitAll());*/
+
         http
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/user/**").hasAnyRole("USER","ADMIN")
+                .antMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                 .antMatchers("/login").permitAll()
                 .anyRequest().authenticated()
                 .and()
@@ -42,9 +63,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .logout().logoutUrl("/logout").logoutSuccessUrl("/login")
                 .permitAll();
 
+        return http.build();
     }
+
     @Bean
-    public PasswordEncoder getPasswordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+    public PasswordEncoder PasswordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
