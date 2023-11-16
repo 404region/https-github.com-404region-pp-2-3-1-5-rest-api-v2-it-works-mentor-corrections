@@ -63,13 +63,11 @@ public class AdminRestController {
 
     @GetMapping("/current")
     public ResponseEntity<User> currentUser(Principal principal) {
-        User user = userService.findByUsername(principal.getName());
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        return new ResponseEntity<>(userService.findByUsername(principal.getName()), HttpStatus.OK);
     }
 
     @GetMapping("/roles")
     public ResponseEntity<List<Role>> getRolesList() {
-        List<Role> roles = roleService.getRolesList();
-        return new ResponseEntity<>(roles, HttpStatus.OK);
+        return new ResponseEntity<>(roleService.getRolesList(), HttpStatus.OK);
     }
 }
