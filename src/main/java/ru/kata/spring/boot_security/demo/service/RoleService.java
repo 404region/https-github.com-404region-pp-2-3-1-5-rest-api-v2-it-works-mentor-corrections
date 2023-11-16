@@ -6,12 +6,9 @@ import ru.kata.spring.boot_security.demo.model.Role;
 
 import java.util.List;
 
+
 public interface RoleService {
-
-    List<Role> getAllRoles();
-
-    void saveRole(Role role);
-
-    Role getRoleById(long id);
+    List<Role> getRolesList();
+    void save(Role role);
 
 }

@@ -17,57 +17,45 @@ import ru.kata.spring.boot_security.demo.service.UserService;
 
 @Configuration
 @EnableWebSecurity
-@PreAuthorize("hasRole('ADMIN')")
-public class WebSecurityConfig {
-
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final SuccessUserHandler successUserHandler;
+    private final UserService userService;
 
-    @Autowired
-    public WebSecurityConfig(SuccessUserHandler successUserHandler) {
+    public WebSecurityConfig(SuccessUserHandler successUserHandler, UserService userService) {
         this.successUserHandler = successUserHandler;
+        this.userService = userService;
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        /*
-                .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/admin**").hasAuthority("ADMIN")
-                        .requestMatchers("/user**", "/api/user/**").hasAnyAuthority("ADMIN", "USER")
-                        .anyRequest().authenticated()
-                )
-                .formLogin((form) -> form
-                        .permitAll()
-                        .successHandler(successUserHandler)
-                )
-                .logout((logout) -> logout
-                        .logoutUrl("/logout")
-                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
-                        .logoutSuccessUrl("/login")
-                        .permitAll());*/
-
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
+                .csrf()
+                .disable()
                 .authorizeRequests()
-                .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                .antMatchers("/login").not().fullyAuthenticated()
+                .antMatchers("/admin/**", "/api/admin").hasRole("ADMIN")
+                .antMatchers("/user/**", "/api/user").hasAnyRole("ADMIN", "USER")
+                .antMatchers("/").permitAll()
                 .antMatchers("/login").permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .formLogin()
+                .formLogin().successHandler(successUserHandler)
                 .loginPage("/login")
-                .usernameParameter("email")
+                .usernameParameter("username")
                 .passwordParameter("password")
-                .successHandler(successUserHandler)
                 .permitAll()
                 .and()
-                .logout().logoutUrl("/logout").logoutSuccessUrl("/login")
-                .permitAll();
-
-        return http.build();
+                .logout()
+                .permitAll()
+                .logoutRequestMatcher((new AntPathRequestMatcher("/logout")))
+                .logoutSuccessUrl("/login")
+                .and().csrf().disable();
     }
+
 
     @Bean
-    public PasswordEncoder PasswordEncoder() {
+    public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }

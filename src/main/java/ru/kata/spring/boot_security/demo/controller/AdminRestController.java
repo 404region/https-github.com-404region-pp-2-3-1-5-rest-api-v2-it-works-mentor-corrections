@@ -18,59 +18,58 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
-@PreAuthorize("hasRole('ADMIN')")
-@RequestMapping("/api/admin")
+@RequestMapping("api/admin")
 public class AdminRestController {
-
-    private final RoleService roleService;
     private final UserService userService;
+    private final RoleService roleService;
 
     @Autowired
-    public AdminRestController(RoleService roleService, UserService userService) {
-        this.roleService = roleService;
+    public AdminRestController(UserService userService, RoleService roleService) {
         this.userService = userService;
+        this.roleService = roleService;
     }
 
-    @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return users != null && !users.isEmpty()
-                ? new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    @GetMapping
+    public ResponseEntity<List<User>> getUsersList() {
+        return new ResponseEntity<>(userService.getUsersList(), HttpStatus.OK);
     }
 
-    @GetMapping("users/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable("id") long id) {
-        User user = userService.findUserById(id);
-        return user != null
-                ? new ResponseEntity<>(user, HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getById(@PathVariable("id") Integer id) {
+        return new ResponseEntity<>(userService.getById(id), HttpStatus.OK);
     }
 
-    @GetMapping("/roles")
-    public ResponseEntity<List<Role>> getAllRoles() {
-        List<Role> roleList = roleService.getAllRoles();
-        return ResponseEntity.ok(roleList);
+    @PostMapping
+    public ResponseEntity<Void> addUser(@RequestBody User user) {
+        userService.addUser(user);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PostMapping("/users")
-    public ResponseEntity<HttpStatus> saveNewUser(@RequestBody User user) {
-        userService.saveUser(user);
-        return ResponseEntity.ok(HttpStatus.OK);
-    }
-
-    @PutMapping("/users")
-    public ResponseEntity<HttpStatus> updateUser(@RequestBody User user) {
-        userService.updateUser(user);
-        return ResponseEntity.ok(HttpStatus.OK);
+    @PutMapping
+    public ResponseEntity<Void> editUser(@RequestBody User user) {
+        userService.editUser(user);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deleteUser(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") Integer id) {
         userService.deleteUser(id);
-        return ResponseEntity.ok(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("/current")
+    public ResponseEntity<User> currentUser(Principal principal) {
+        User user = userService.findByUsername(principal.getName());
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @GetMapping("/roles")
+    public ResponseEntity<List<Role>> getRolesList() {
+        List<Role> roles = roleService.getRolesList();
+        return new ResponseEntity<>(roles, HttpStatus.OK);
     }
 }
